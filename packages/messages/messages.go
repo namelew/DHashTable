@@ -18,8 +18,8 @@ const (
 
 type Message struct {
 	Action  Action
-	Key     uint64
-	Payload int64
+	Key     string
+	Payload interface{}
 }
 
 func (m *Message) Pack() ([]byte, error) {
