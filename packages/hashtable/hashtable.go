@@ -12,7 +12,7 @@ type Key[K constraints.Ordered] interface {
 	Index() int
 }
 
-type HashTable[I constraints.Ordered, K any] interface {
+type HashTable[I constraints.Ordered, K comparable] interface {
 	hash(id Key[I]) int
 	setArguments(atributes Common)
 	Insert(id Key[I], data K) error
@@ -24,17 +24,17 @@ type Common struct {
 	Size int
 }
 
-type Linked[I constraints.Ordered, K any] struct {
+type Linked[I constraints.Ordered, K comparable] struct {
 	size  int
 	slots []btree.Map[I, K]
 }
 
-type Open[I constraints.Ordered, K any] struct {
+type Open[I constraints.Ordered, K comparable] struct {
 	size  int
 	slots []K
 }
 
-func New[I constraints.Ordered, K any](hashTable HashTable[I, K], parameters Common) HashTable[I, K] {
+func New[I constraints.Ordered, K comparable](hashTable HashTable[I, K], parameters Common) HashTable[I, K] {
 	hashTable.setArguments(parameters)
 	return hashTable
 }
@@ -83,6 +83,15 @@ func (t *Open[I, K]) setArguments(atributes Common) {
 }
 
 func (t *Open[I, K]) Insert(id Key[I], data K) error {
+	var empty K
+	slot := t.hash(id)
+
+	if t.slots[slot] != empty {
+		// find the first empty space
+	} else {
+		t.slots[slot] = data
+	}
+
 	return nil
 }
 
