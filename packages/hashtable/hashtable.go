@@ -55,9 +55,9 @@ func (t *Linked[I, K]) Insert(id Key[I], data K) error {
 }
 
 func (t *Linked[I, K]) Delete(id Key[I]) error {
-	_, notFound := t.slots[t.hash(id)].Delete(id.Value())
+	_, found := t.slots[t.hash(id)].Delete(id.Value())
 
-	if notFound {
+	if !found {
 		return errors.New("delete action failed: unable to find register")
 	}
 
@@ -65,9 +65,9 @@ func (t *Linked[I, K]) Delete(id Key[I]) error {
 }
 
 func (t *Linked[I, K]) Search(id Key[I]) (K, error) {
-	result, notFound := t.slots[t.hash(id)].Get(id.Value())
+	result, found := t.slots[t.hash(id)].Get(id.Value())
 
-	if notFound {
+	if !found {
 		return result, errors.New("query action failed: unable to find register")
 	}
 
