@@ -14,9 +14,14 @@ type Key[K constraints.Ordered] interface {
 
 type HashTable[I constraints.Ordered, K any] interface {
 	hash(id Key[I]) int
+	setArguments(atributes Common)
 	Insert(id Key[I], data K) error
 	Delete(id Key[I]) error
 	Search(id Key[I]) (K, error)
+}
+
+type Common struct {
+	Size int
 }
 
 type Linked[I constraints.Ordered, K any] struct {
@@ -29,14 +34,18 @@ type Open[I constraints.Ordered, K any] struct {
 	slots []K
 }
 
-func (t *Linked[I, K]) init(size int) {
-	if t.size == 0 {
-		t.size = size
-	}
+func New[I constraints.Ordered, K any](hashTable HashTable[I, K], parameters Common) HashTable[I, K] {
+	hashTable.setArguments(parameters)
+	return hashTable
 }
 
 func (t *Linked[I, K]) hash(id Key[I]) int {
 	return id.Index() % t.size
+}
+
+func (t *Linked[I, K]) setArguments(atributes Common) {
+	t.size = atributes.Size
+	t.slots = make([]btree.Map[I, K], t.size)
 }
 
 func (t *Linked[I, K]) Insert(id Key[I], data K) error {
@@ -64,14 +73,13 @@ func (t *Linked[I, K]) Search(id Key[I]) (K, error) {
 	return result, nil
 }
 
-func (t *Open[I, K]) init(size int) {
-	if t.size == 0 {
-		t.size = size
-	}
-}
-
 func (t *Open[I, K]) hash(id Key[I]) int {
 	return id.Index() % t.size
+}
+
+func (t *Open[I, K]) setArguments(atributes Common) {
+	t.size = atributes.Size
+	t.slots = make([]K, t.size)
 }
 
 func (t *Open[I, K]) Insert(id Key[I], data K) error {
