@@ -31,6 +31,7 @@ type Linked[I constraints.Ordered, K comparable] struct {
 
 type Open[I constraints.Ordered, K comparable] struct {
 	size  int
+	indices []I
 	slots []K
 }
 
@@ -80,6 +81,7 @@ func (t *Open[I, K]) hash(id Key[I]) int {
 func (t *Open[I, K]) setArguments(atributes Common) {
 	t.size = atributes.Size
 	t.slots = make([]K, t.size)
+	t.indices = make([]I, t.size)
 }
 
 func (t *Open[I, K]) Insert(id Key[I], data K) error {
@@ -87,19 +89,53 @@ func (t *Open[I, K]) Insert(id Key[I], data K) error {
 	slot := t.hash(id)
 
 	if t.slots[slot] != empty {
-		// find the first empty space
-	} else {
-		t.slots[slot] = data
+		for i := slot + 1; i < t.size; i++ {
+			if t.slots[i] == empty {
+				t.slots[i] = data
+				t.indices[i] = id.Value()
+				return nil
+			}
+		}
+		return errors.New("unable to insert data: no free slot")
 	}
 
+	t.slots[slot] = data
+	t.indices[slot] = id.Value()
 	return nil
 }
 
 func (t *Open[I, K]) Delete(id Key[I]) error {
-	return nil
+	var empty K
+	slot := t.hash(id)
+
+	if t.indices[slot] == id.Value() {
+		t.slots[slot] = empty
+		return nil
+	} else {
+		for i := slot + 1; i < t.size; i++ {
+			if t.indices[i] == id.Value() {
+				t.slots[i] = empty
+				return nil
+			}
+		}
+	}
+
+	return errors.New("unable to find element")
 }
 
 func (t *Open[I, K]) Search(id Key[I]) (K, error) {
-	var result K
-	return result, nil
+	var empty K
+	slot := t.hash(id)
+
+	if t.indices[slot] == id.Value() {
+		return t.slots[slot], nil
+	} else {
+		for i := slot + 1; i < t.size; i++ {
+			if t.indices[i] == id.Value() {
+				return t.slots[i], nil
+			}
+		}
+	}
+
+	return empty, errors.New("unable to find element")
 }
