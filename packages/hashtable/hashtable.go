@@ -29,6 +29,12 @@ type Open[I constraints.Ordered, K any] struct {
 	slots []K
 }
 
+func (t *Linked[I, K]) init(size int) {
+	if t.size == 0 {
+		t.size = size
+	}
+}
+
 func (t *Linked[I, K]) hash(id Key[I]) int {
 	return id.Index() % t.size
 }
@@ -56,6 +62,12 @@ func (t *Linked[I, K]) Search(id Key[I]) (K, error) {
 	}
 
 	return result, nil
+}
+
+func (t *Open[I, K]) init(size int) {
+	if t.size == 0 {
+		t.size = size
+	}
 }
 
 func (t *Open[I, K]) hash(id Key[I]) int {
