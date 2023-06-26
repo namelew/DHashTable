@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	pid := server.New(0, "localhost:30001")
+	pid := server.New(1)
 	log.Println(pid)
 	pid.Build()
 }

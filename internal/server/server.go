@@ -14,13 +14,19 @@ import (
 	"github.com/namelew/DHashTable/packages/messages"
 )
 
+type Node struct {
+	adress string
+	start  int
+	end    int
+}
+
 type FileSystem struct {
 	adress       string
 	id           uint64
 	start        int
 	end          int
 	lock         sync.Mutex
-	neighborhood [][]int
+	neighborhood []Node
 	inodes       hashtable.HashTable[string, string]
 }
 
@@ -36,7 +42,7 @@ func removeBackSlash(s string) string {
 	return s
 }
 
-func New(id uint64, adress string) *FileSystem {
+func New(id uint64) *FileSystem {
 	data, err := os.ReadFile(SOURCEFILE)
 
 	if err != nil {
@@ -52,42 +58,44 @@ func New(id uint64, adress string) *FileSystem {
 	}
 
 	var start, end int = 0, 0
-	table := make([][]int, 0)
+	table := make([]Node, 0)
 
 	for i := range lines {
 		if i > 0 {
 			cols := strings.Split(lines[i], " ")
 
-			if len(cols) < 3 {
+			if len(cols) < 4 {
 				continue
 			}
 
-			line := make([]int, 2)
+			server := Node{}
 
-			start, err = strconv.Atoi(removeBackSlash(cols[1]))
+			server.adress = removeBackSlash(cols[1])
+
+			start, err = strconv.Atoi(removeBackSlash(cols[2]))
 
 			if err != nil {
 				log.Panic("Unable to create file system. Error on table start load: ", err.Error())
 			}
 
-			end, err = strconv.Atoi(removeBackSlash(cols[2]))
+			end, err = strconv.Atoi(removeBackSlash(cols[3]))
 
 			if err != nil {
 				log.Panic("Unable to create file system. Error on table end load: ", err.Error())
 			}
 
-			line[0] = start
-			line[1] = end
+			server.start = start
+			server.end = end
 
-			table = append(table, line)
+			table = append(table, server)
 		}
 	}
 
 	return &FileSystem{
 		id:           id,
-		adress:       adress,
-		start:        table[id][0],
-		end:          table[id][1],
+		adress:       table[id].adress,
+		start:        table[id].start,
+		end:          table[id].end,
 		neighborhood: table,
 		inodes:       hashtable.New[string, string](&hashtable.Open[string, string]{}, hashtable.Common{Size: size}),
 	}
@@ -102,6 +110,7 @@ func (fs *FileSystem) insert(m *messages.Message) messages.Message {
 			log.Printf("Unable to insert %s in register: %s\n", m.Name, err.Error())
 			return messages.Message{}
 		}
+		log.Printf("Register %s was inserted with key %s in slot %d\n", m.Name, m.Key, fs.inodes.Hash(m))
 	} else {
 		log.Println("Out of domain! Redirecting request...")
 	}
@@ -141,6 +150,7 @@ func (fs *FileSystem) remove(m *messages.Message) messages.Message {
 			log.Printf("Unable to remove %s from register: %s\n", m.Name, err.Error())
 			return messages.Message{}
 		}
+		log.Printf("Register in key %s was removed\n", m.Key)
 	} else {
 		log.Println("Out of domain! Redirecting request...")
 	}
