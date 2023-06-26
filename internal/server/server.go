@@ -15,12 +15,13 @@ import (
 )
 
 type FileSystem struct {
-	adress string
-	id     uint64
-	start  int
-	end    int
-	lock   sync.Mutex
-	inodes hashtable.HashTable[string, string]
+	adress       string
+	id           uint64
+	start        int
+	end          int
+	lock         sync.Mutex
+	neighborhood [][]int
+	inodes       hashtable.HashTable[string, string]
 }
 
 const SOURCEFILE = "./routing_table.in"
@@ -51,6 +52,7 @@ func New(id uint64, adress string) *FileSystem {
 	}
 
 	var start, end int = 0, 0
+	table := make([][]int, 0)
 
 	for i := range lines {
 		if i > 0 {
@@ -60,34 +62,34 @@ func New(id uint64, adress string) *FileSystem {
 				continue
 			}
 
-			sid, err := strconv.ParseUint(removeBackSlash(cols[0]), 10, 64)
+			line := make([]int, 2)
+
+			start, err = strconv.Atoi(removeBackSlash(cols[1]))
 
 			if err != nil {
-				log.Panic("Unable to create file system. Error on start and end load: ", err.Error())
+				log.Panic("Unable to create file system. Error on table start load: ", err.Error())
 			}
 
-			if sid == id {
-				start, err = strconv.Atoi(removeBackSlash(cols[1]))
+			end, err = strconv.Atoi(removeBackSlash(cols[2]))
 
-				if err != nil {
-					log.Panic("Unable to create file system. Error on table start load: ", err.Error())
-				}
-
-				end, err = strconv.Atoi(removeBackSlash(cols[2]))
-
-				if err != nil {
-					log.Panic("Unable to create file system. Error on table end load: ", err.Error())
-				}
+			if err != nil {
+				log.Panic("Unable to create file system. Error on table end load: ", err.Error())
 			}
+
+			line[0] = start
+			line[1] = end
+
+			table = append(table, line)
 		}
 	}
 
 	return &FileSystem{
-		id:     id,
-		adress: adress,
-		start:  start,
-		end:    end,
-		inodes: hashtable.New[string, string](&hashtable.Open[string, string]{}, hashtable.Common{Size: size}),
+		id:           id,
+		adress:       adress,
+		start:        table[id][0],
+		end:          table[id][1],
+		neighborhood: table,
+		inodes:       hashtable.New[string, string](&hashtable.Open[string, string]{}, hashtable.Common{Size: size}),
 	}
 }
 
