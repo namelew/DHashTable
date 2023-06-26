@@ -97,7 +97,7 @@ func New(id uint64) *FileSystem {
 		start:        table[id].start,
 		end:          table[id].end,
 		neighborhood: table,
-		inodes:       hashtable.New[string, string](&hashtable.Open[string, string]{}, hashtable.Common{Size: size}),
+		inodes:       hashtable.New[string, string](&hashtable.Open[string, string]{}, hashtable.Common{Size: size, End: table[id].end}),
 	}
 }
 

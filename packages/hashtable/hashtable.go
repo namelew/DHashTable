@@ -21,6 +21,7 @@ type HashTable[I constraints.Ordered, K comparable] interface {
 }
 
 type Common struct {
+	End  int
 	Size int
 }
 
@@ -30,9 +31,10 @@ type Linked[I constraints.Ordered, K comparable] struct {
 }
 
 type Open[I constraints.Ordered, K comparable] struct {
-	size  int
+	end     int
+	size    int
 	indices []I
-	slots []K
+	slots   []K
 }
 
 func New[I constraints.Ordered, K comparable](hashTable HashTable[I, K], parameters Common) HashTable[I, K] {
@@ -80,6 +82,7 @@ func (t *Open[I, K]) Hash(id Key[I]) int {
 
 func (t *Open[I, K]) setArguments(atributes Common) {
 	t.size = atributes.Size
+	t.end = atributes.End
 	t.slots = make([]K, t.size)
 	t.indices = make([]I, t.size)
 }
@@ -89,7 +92,7 @@ func (t *Open[I, K]) Insert(id Key[I], data K) error {
 	slot := t.Hash(id)
 
 	if t.slots[slot] != empty {
-		for i := slot + 1; i < t.size; i++ {
+		for i := slot + 1; i < t.end; i++ {
 			if t.slots[i] == empty {
 				t.slots[i] = data
 				t.indices[i] = id.Value()
@@ -112,7 +115,7 @@ func (t *Open[I, K]) Delete(id Key[I]) error {
 		t.slots[slot] = empty
 		return nil
 	} else {
-		for i := slot + 1; i < t.size; i++ {
+		for i := slot + 1; i < t.end; i++ {
 			if t.indices[i] == id.Value() {
 				t.slots[i] = empty
 				return nil
