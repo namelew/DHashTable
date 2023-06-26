@@ -13,7 +13,7 @@ type Key[K constraints.Ordered] interface {
 }
 
 type HashTable[I constraints.Ordered, K comparable] interface {
-	hash(id Key[I]) int
+	Hash(id Key[I]) int
 	setArguments(atributes Common)
 	Insert(id Key[I], data K) error
 	Delete(id Key[I]) error
@@ -40,7 +40,7 @@ func New[I constraints.Ordered, K comparable](hashTable HashTable[I, K], paramet
 	return hashTable
 }
 
-func (t *Linked[I, K]) hash(id Key[I]) int {
+func (t *Linked[I, K]) Hash(id Key[I]) int {
 	return id.Index() % t.size
 }
 
@@ -50,12 +50,12 @@ func (t *Linked[I, K]) setArguments(atributes Common) {
 }
 
 func (t *Linked[I, K]) Insert(id Key[I], data K) error {
-	t.slots[t.hash(id)].Set(id.Value(), data)
+	t.slots[t.Hash(id)].Set(id.Value(), data)
 	return nil
 }
 
 func (t *Linked[I, K]) Delete(id Key[I]) error {
-	_, found := t.slots[t.hash(id)].Delete(id.Value())
+	_, found := t.slots[t.Hash(id)].Delete(id.Value())
 
 	if !found {
 		return errors.New("delete action failed: unable to find register")
@@ -65,7 +65,7 @@ func (t *Linked[I, K]) Delete(id Key[I]) error {
 }
 
 func (t *Linked[I, K]) Search(id Key[I]) (K, error) {
-	result, found := t.slots[t.hash(id)].Get(id.Value())
+	result, found := t.slots[t.Hash(id)].Get(id.Value())
 
 	if !found {
 		return result, errors.New("query action failed: unable to find register")
@@ -74,7 +74,7 @@ func (t *Linked[I, K]) Search(id Key[I]) (K, error) {
 	return result, nil
 }
 
-func (t *Open[I, K]) hash(id Key[I]) int {
+func (t *Open[I, K]) Hash(id Key[I]) int {
 	return id.Index() % t.size
 }
 
@@ -86,7 +86,7 @@ func (t *Open[I, K]) setArguments(atributes Common) {
 
 func (t *Open[I, K]) Insert(id Key[I], data K) error {
 	var empty K
-	slot := t.hash(id)
+	slot := t.Hash(id)
 
 	if t.slots[slot] != empty {
 		for i := slot + 1; i < t.size; i++ {
@@ -106,7 +106,7 @@ func (t *Open[I, K]) Insert(id Key[I], data K) error {
 
 func (t *Open[I, K]) Delete(id Key[I]) error {
 	var empty K
-	slot := t.hash(id)
+	slot := t.Hash(id)
 
 	if t.indices[slot] == id.Value() {
 		t.slots[slot] = empty
@@ -125,7 +125,7 @@ func (t *Open[I, K]) Delete(id Key[I]) error {
 
 func (t *Open[I, K]) Search(id Key[I]) (K, error) {
 	var empty K
-	slot := t.hash(id)
+	slot := t.Hash(id)
 
 	if t.indices[slot] == id.Value() {
 		return t.slots[slot], nil
