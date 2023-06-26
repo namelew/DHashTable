@@ -17,9 +17,23 @@ const (
 )
 
 type Message struct {
-	Action  Action
-	Key     string
-	Payload interface{}
+	Action Action
+	Key    string
+	Name   string
+}
+
+func (m *Message) Index() int {
+	sum := 0
+
+	for i := range m.Key {
+		sum += int(m.Key[i])
+	}
+
+	return sum
+}
+
+func (m *Message) Value() string {
+	return m.Key
 }
 
 func (m *Message) Pack() ([]byte, error) {
