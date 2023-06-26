@@ -2,9 +2,13 @@ package server
 
 import (
 	"log"
+	"net"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
+	"sync"
+	"syscall"
 
 	"github.com/namelew/DHashTable/packages/hashtable"
 )
@@ -14,6 +18,7 @@ type FileSystem struct {
 	id     uint64
 	start  int
 	end    int
+	lock   sync.Mutex
 	inodes hashtable.HashTable[string, string]
 }
 
@@ -83,4 +88,35 @@ func New(id uint64, adress string) *FileSystem {
 		end:    end,
 		inodes: hashtable.New[string, string](&hashtable.Open[string, string]{}, hashtable.Common{Size: size}),
 	}
+}
+
+func (fs *FileSystem) handlerRequests() {
+	listener, err := net.Listen("tcp", fs.adress)
+
+	if err != nil {
+		log.Panic("Unable to create request handler: ", err.Error())
+	}
+
+	for {
+		conn, err := listener.Accept()
+
+		if err != nil {
+			log.Println("Enable to create connection: ", err.Error())
+			continue
+		}
+
+		go func(c net.Conn) {
+
+		}(conn)
+	}
+}
+
+func (fs *FileSystem) Build() {
+	log.Println("Init request handler...")
+	go fs.handlerRequests()
+
+	log.Printf("File System Node %d started\n", fs.id)
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	<-c
 }
