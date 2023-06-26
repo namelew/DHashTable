@@ -96,19 +96,56 @@ func New(id uint64, adress string) *FileSystem {
 func (fs *FileSystem) insert(m *messages.Message) messages.Message {
 	fs.lock.Lock()
 	defer fs.lock.Unlock()
-	return messages.Message{}
+
+	if fs.inodes.Hash(m) >= fs.start && fs.inodes.Hash(m) <= fs.end {
+		if err := fs.inodes.Insert(m, m.Name); err != nil {
+			log.Printf("Unable to insert %s in register: %s\n", m.Name, err.Error())
+			return messages.Message{}
+		}
+	} else {
+		log.Println("Out of domain! Redirecting request...")
+	}
+
+	return messages.Message{Action: messages.ACK}
 }
 
 func (fs *FileSystem) query(m *messages.Message) messages.Message {
 	fs.lock.Lock()
 	defer fs.lock.Unlock()
-	return messages.Message{}
+
+	response := messages.Message{
+		Key:    m.Key,
+		Action: messages.ACK,
+	}
+
+	if fs.inodes.Hash(m) >= fs.start && fs.inodes.Hash(m) <= fs.end {
+		data, err := fs.inodes.Search(m)
+		if err != nil {
+			log.Printf("Unable to find %s in register: %s\n", m.Key, err.Error())
+			return messages.Message{}
+		}
+		response.Name = data
+	} else {
+		log.Println("Out of domain! Redirecting request...")
+	}
+
+	return response
 }
 
 func (fs *FileSystem) remove(m *messages.Message) messages.Message {
 	fs.lock.Lock()
 	defer fs.lock.Unlock()
-	return messages.Message{}
+
+	if fs.inodes.Hash(m) >= fs.start && fs.inodes.Hash(m) <= fs.end {
+		if err := fs.inodes.Delete(m); err != nil {
+			log.Printf("Unable to remove %s from register: %s\n", m.Name, err.Error())
+			return messages.Message{}
+		}
+	} else {
+		log.Println("Out of domain! Redirecting request...")
+	}
+
+	return messages.Message{Action: messages.ACK}
 }
 
 func (fs *FileSystem) handlerRequests() {
