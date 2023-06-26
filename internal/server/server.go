@@ -11,6 +11,7 @@ import (
 	"syscall"
 
 	"github.com/namelew/DHashTable/packages/hashtable"
+	"github.com/namelew/DHashTable/packages/messages"
 )
 
 type FileSystem struct {
@@ -90,6 +91,24 @@ func New(id uint64, adress string) *FileSystem {
 	}
 }
 
+func (fs *FileSystem) insert(m *messages.Message) messages.Message {
+	fs.lock.Lock()
+	defer fs.lock.Unlock()
+	return messages.Message{}
+}
+
+func (fs *FileSystem) query(m *messages.Message) messages.Message {
+	fs.lock.Lock()
+	defer fs.lock.Unlock()
+	return messages.Message{}
+}
+
+func (fs *FileSystem) remove(m *messages.Message) messages.Message {
+	fs.lock.Lock()
+	defer fs.lock.Unlock()
+	return messages.Message{}
+}
+
 func (fs *FileSystem) handlerRequests() {
 	listener, err := net.Listen("tcp", fs.adress)
 
@@ -106,7 +125,25 @@ func (fs *FileSystem) handlerRequests() {
 		}
 
 		go func(c net.Conn) {
+			var request, response messages.Message
 
+			if err := request.Receive(c); err != nil {
+				log.Println("Unable to receive message from ", c.RemoteAddr().String(), ":", err.Error())
+				return
+			}
+
+			switch request.Action {
+			case messages.INSERT:
+				response = fs.insert(&request)
+			case messages.QUERY:
+				response = fs.query(&request)
+			case messages.REMOVE:
+				response = fs.remove(&request)
+			}
+
+			if err := response.Send(c); err != nil {
+				log.Println("Unable to send response to ", c.RemoteAddr().String(), ":", err.Error())
+			}
 		}(conn)
 	}
 }
