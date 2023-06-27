@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"log"
+	"net"
 	"os"
 	"strconv"
 	"strings"
@@ -49,6 +50,27 @@ func main() {
 		m.Action = messages.Action(a)
 		m.Key = input[2]
 		m.Name = sanitaze(strings.Join(input[3:], " "))
+
+		conn, err := net.Dial("tcp", input[1])
+
+		if err != nil {
+			log.Println(err.Error())
+			continue
+		}
+
+		if err := m.Send(conn); err != nil {
+			conn.Close()
+			log.Println("Unable to send request. ", err.Error())
+			continue
+		}
+
+		if err := m.Receive(conn); err != nil {
+			conn.Close()
+			log.Println("Unable to receive response. ", err.Error())
+			continue
+		}
+
+		conn.Close()
 
 		log.Println(m)
 	}

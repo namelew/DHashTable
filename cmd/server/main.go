@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	pid := server.New(1)
+	pid := server.New(0)
 	log.Println(pid)
 	pid.Build()
 }
