@@ -112,15 +112,18 @@ func (t *Open[I, K]) Insert(id Key[I], data K) error {
 
 func (t *Open[I, K]) Delete(id Key[I]) error {
 	var empty K
+	var emptyID I
 	slot := t.Hash(id)
 
 	if t.indices[slot] == id.Value() {
 		t.slots[slot] = empty
+		t.indices[slot] = emptyID
 		return nil
 	} else {
 		for i := slot + 1; i < t.end; i++ {
 			if t.indices[i] == id.Value() {
 				t.slots[i] = empty
+				t.indices[i] = emptyID
 				return nil
 			}
 		}

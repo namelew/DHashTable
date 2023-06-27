@@ -106,11 +106,11 @@ func (fs *FileSystem) redirect(m *messages.Message) messages.Message {
 		slot := fs.inodes.Hash(m)
 
 		if slot >= fs.neighborhood[nid].start && slot <= fs.neighborhood[nid].end {
-			log.Println("Request redirect to server ", nid, " in adress ", fs.neighborhood[nid].adress)
+			log.Println("Request redirect to server", nid, " in adress", fs.neighborhood[nid].adress)
 			conn, err := net.Dial("tcp", fs.neighborhood[nid].adress)
 
 			if err != nil {
-				log.Println("Unable to create connection with node ", nid, ":", err.Error())
+				log.Println("Unable to create connection with node", nid, ":", err.Error())
 				return messages.Message{}
 			}
 
