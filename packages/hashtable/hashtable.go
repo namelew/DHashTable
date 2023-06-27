@@ -92,6 +92,9 @@ func (t *Open[I, K]) Insert(id Key[I], data K) error {
 	slot := t.Hash(id)
 
 	if t.slots[slot] != empty {
+		if t.indices[slot] == id.Value() {
+			return errors.New("unable to insert data: duplicated key")
+		}
 		for i := slot + 1; i < t.end; i++ {
 			if t.slots[i] == empty {
 				t.slots[i] = data
